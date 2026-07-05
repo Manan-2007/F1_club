@@ -1,0 +1,538 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --f1-bg: #070707;
+  --f1-surface: #111111;
+  --f1-carbon: #1b1b1b;
+  --f1-red: #e10600;
+  --f1-white: #f4f4f4;
+  --f1-green: #00ff99;
+  --f1-silver: #9ca3af;
+}
+
+@layer base {
+  body {
+    @apply bg-f1-bg text-f1-white font-sans antialiased;
+  }
+
+  /* R3F canvas — kill inline-element gap under the hero canvas */
+  canvas {
+    display: block;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--f1-red);
+    color: var(--f1-white);
+  }
+
+  ::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--f1-bg);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--f1-red);
+  }
+}
+
+@layer components {
+  .f1-container {
+    @apply max-w-7xl mx-auto px-6 lg:px-16;
+  }
+
+  .f1-heading {
+    @apply font-sans font-bold uppercase tracking-[0.05em] text-f1-white;
+  }
+
+  .f1-eyebrow {
+    @apply font-mono tracking-[0.2em] uppercase text-f1-green;
+    font-size: 0.75rem;
+  }
+
+  .f1-mono {
+    @apply font-mono text-f1-green;
+    font-size: 0.8rem;
+  }
+
+  .glass-panel {
+    background: rgba(7, 7, 7, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .telemetry-card {
+    /* transition colors only — Framer Motion owns the transform (hover lift) */
+    @apply relative bg-f1-surface transition-colors duration-300;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 2px;
+  }
+
+  .telemetry-card::before {
+    content: '';
+    @apply absolute left-0 top-0 w-[2px] bg-f1-red;
+    height: 0%;
+    transition: height 0.35s ease;
+  }
+
+  .telemetry-card:hover {
+    border-color: rgba(225, 6, 0, 0.3);
+  }
+
+  .telemetry-card:hover::before {
+    height: 100%;
+  }
+
+  .btn-primary {
+    /* transition colors only — CSS transitions on opacity/transform corrupt
+       the end-values GSAP captures for delayed from() tweens */
+    @apply inline-flex items-center justify-center bg-f1-red text-f1-white font-sans font-semibold uppercase px-8 py-4 transition-colors duration-300;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  }
+
+  .btn-primary:hover {
+    background-color: #c00500;
+    transform: translateY(-1px);
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center bg-transparent text-f1-white font-sans font-semibold uppercase px-8 py-4 transition-colors duration-300;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    border: 1px solid rgba(244, 244, 244, 0.25);
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  }
+
+  .btn-outline:hover {
+    border-color: var(--f1-red);
+    transform: translateY(-1px);
+  }
+
+  .section-tag {
+    @apply inline-flex items-center gap-2;
+  }
+
+  .section-tag::before {
+    content: '';
+    @apply inline-block w-6 h-[2px] bg-f1-red;
+  }
+
+  .stat-block {
+    border-left: 2px solid var(--f1-red);
+    padding-left: 1.25rem;
+  }
+
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  .f1-divider {
+    @apply w-full h-px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(225, 6, 0, 0.5),
+      transparent
+    );
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   EASTER EGGS
+═══════════════════════════════════════════════════ */
+
+/* ── DRS MODE — animated horizontal scan lines ─── */
+html.easter-drs body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(225, 6, 0, 0.03) 3px,
+    rgba(225, 6, 0, 0.03) 4px
+  );
+  animation: drs-scan 8s linear infinite;
+}
+
+html.easter-drs body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9997;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(225, 6, 0, 0.06) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: drs-sweep 2s ease-in-out infinite;
+}
+
+/* DRS HUD overlay — top right */
+html.easter-drs::before {
+  content: 'DRS ENABLED';
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 9999;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #00ff99;
+  padding: 4px 10px;
+  border: 1px solid rgba(0, 255, 153, 0.4);
+  background: rgba(0, 0, 0, 0.8);
+  animation: drs-blink 1s step-start infinite;
+  pointer-events: none;
+}
+
+@keyframes drs-scan {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 100px;
+  }
+}
+
+@keyframes drs-sweep {
+  0%,
+  100% {
+    background-position: -200% 0;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  50% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes drs-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ── POLE POSITION MODE — everything gold ─────── */
+html.easter-pole {
+  --f1-red: #ffd700;
+  --f1-green: #ffd700;
+  filter: sepia(0.15);
+}
+
+html.easter-pole .text-f1-red {
+  color: #ffd700 !important;
+}
+html.easter-pole .bg-f1-red {
+  background-color: #ffd700 !important;
+}
+html.easter-pole .border-f1-red {
+  border-color: #ffd700 !important;
+}
+html.easter-pole .btn-primary {
+  background: linear-gradient(135deg, #ffd700, #ffa500) !important;
+  color: #000 !important;
+}
+html.easter-pole .text-f1-green {
+  color: #ffd700 !important;
+}
+
+/* Pole position crown overlay */
+html.easter-pole::before {
+  content: 'P1 — POLE POSITION';
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 9999;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #000;
+  padding: 4px 10px;
+  background: #ffd700;
+  pointer-events: none;
+}
+
+/* Subtle gold particle shimmer on body */
+html.easter-pole body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9997;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(255, 215, 0, 0.08) 0%,
+    transparent 70%
+  );
+}
+
+/* ── LIGHTS OUT MODE — blackout then reveal ───── */
+html.easter-lightsout {
+  animation: lights-out-sequence 3s ease-in-out forwards;
+}
+
+@keyframes lights-out-sequence {
+  /* Lights go out one by one */
+  0% {
+    filter: brightness(1);
+  }
+  10% {
+    filter: brightness(0.7);
+  }
+  20% {
+    filter: brightness(0.4);
+  }
+  30% {
+    filter: brightness(0.1);
+  }
+  40% {
+    filter: brightness(0.02);
+  }
+  /* Hold darkness */
+  50% {
+    filter: brightness(0.01);
+  }
+  /* Five red lights sequence */
+  60% {
+    filter: brightness(0.05) sepia(1) hue-rotate(-10deg) saturate(5);
+  }
+  70% {
+    filter: brightness(0.02);
+  }
+  /* GO — burst of light */
+  80% {
+    filter: brightness(0.01);
+  }
+  90% {
+    filter: brightness(2) saturate(1.5);
+  }
+  /* Return to normal */
+  100% {
+    filter: brightness(1);
+  }
+}
+
+html.easter-lightsout::before {
+  content: 'LIGHTS OUT AND AWAY WE GO';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e10600;
+  text-align: center;
+  animation: lights-out-text 3s ease-in-out forwards;
+  pointer-events: none;
+}
+
+@keyframes lights-out-text {
+  0%,
+  45% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  55% {
+    opacity: 0;
+  }
+  65% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ── CHITKARA MODE — university pride ─────────── */
+html.easter-chitkara::before {
+  content: 'GO CHITKARA 🏎️';
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 9999;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  padding: 6px 14px;
+  background: #e10600;
+  pointer-events: none;
+  animation: slide-in-from-right 0.4s ease-out forwards;
+}
+
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Lenis smooth scroll */
+html.lenis {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   MOBILE BASE (< 768px)
+═══════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  /* Prevent horizontal overflow */
+  body,
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* Container padding on small screens */
+  .f1-container {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  /* Headlines — never overflow the viewport */
+  .f1-heading {
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* Buttons — full width on smallest screens */
+  .btn-primary,
+  .btn-outline {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Telemetry cards — slightly less padding */
+  .telemetry-card {
+    padding: 1rem;
+  }
+
+  /* Section spacing reduction (only affects sections without py- utilities) */
+  section {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+
+  /* Tables don't overflow */
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  /* Prevents iOS auto-zoom on input focus */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Touch devices — remove hover states that stick */
+@media (hover: none) {
+  .telemetry-card:hover {
+    transform: none;
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+  .telemetry-card:hover::before {
+    height: 0;
+  }
+  .btn-primary:hover,
+  .btn-outline:hover {
+    transform: none;
+  }
+}
+
+/* Horizontal-scroll filter bars */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOUCH + ACCESSIBILITY
+═══════════════════════════════════════════════════ */
+
+/* Keyboard focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--f1-red);
+  outline-offset: 2px;
+}
+
+/* Tap highlight color */
+* {
+  -webkit-tap-highlight-color: rgba(225, 6, 0, 0.15);
+}
+
+/* Minimum tap target for all interactive elements */
+button,
+a,
+[role='button'] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Exception — inline text links don't need 44px height */
+p a,
+nav a {
+  min-height: unset;
+  min-width: unset;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
