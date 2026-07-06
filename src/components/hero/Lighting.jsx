@@ -66,7 +66,7 @@ export default function Lighting() {
       {/* Shadow catcher floor — FLOOR_Y in F1CarModel must match this */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -1.4, 0]}
+        position={[0, -1.2, 0]}
         receiveShadow
       >
         <planeGeometry args={[40, 40]} />
