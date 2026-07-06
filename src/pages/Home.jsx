@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import PageWrapper from '@/components/layout/PageWrapper'
@@ -9,7 +9,7 @@ import Badge from '@/components/ui/Badge'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import { useCountUp } from '@/hooks/useCountUp'
 
-const stats = [
+const DEFAULT_STATS = [
   { value: '50', suffix: '+', label: 'Active Members' },
   { value: '12', suffix: '', label: 'Projects Built' },
   { value: '6', suffix: '', label: 'Events Completed' },
@@ -50,7 +50,23 @@ function StatValue({ value, suffix }) {
 }
 
 export default function Home() {
+  const [stats, setStats] = useState(DEFAULT_STATS)
   const introRef = useRef(null)
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch('/api/site-config')
+      if (!res.ok) return
+      const { stats: s } = await res.json()
+      setStats([
+        { value: String(s.members), suffix: '+', label: 'Active Members' },
+        { value: String(s.projects), suffix: '', label: 'Projects Built' },
+        { value: String(s.events), suffix: '', label: 'Events Completed' },
+        { value: String(s.seasons), suffix: '', label: 'Seasons Running' },
+      ])
+    }
+    load()
+  }, [])
 
   // Club intro — columns slide in from opposite sides
   useEffect(() => {

@@ -14,12 +14,24 @@ const roles = [
   { icon: 'O', name: 'Operations', desc: 'Events · Logistics · Comms' },
 ]
 
+// Maps role card display names to the `applications.role` enum.
+const ROLE_TO_ENUM = {
+  Developer: 'developer',
+  Designer: 'designer',
+  'Data / AI': 'data',
+  Strategist: 'strategist',
+  Media: 'media',
+  Operations: 'operations',
+}
+
 const inputClasses =
   'bg-f1-surface border border-white/10 text-f1-white px-4 py-3 text-sm placeholder:text-f1-silver/30 focus:border-f1-red focus:outline-none transition-colors duration-200 w-full'
 
 export default function Join() {
   const [selectedRole, setSelectedRole] = useState(null)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -59,11 +71,32 @@ export default function Join() {
     form.year &&
     form.why.trim()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!isValid) return
-    // Firestore write will be wired by the backend partner
-    setSubmitted(true)
+    setSubmitting(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.fullName,
+          email: form.email,
+          year: form.year,
+          role: ROLE_TO_ENUM[selectedRole],
+          why: form.why,
+          link: form.link || null,
+        }),
+      })
+      if (!res.ok) throw new Error('Request failed')
+      setSubmitted(true)
+    } catch (err) {
+      setError('Something went wrong submitting your application. Please try again.')
+      console.error(err)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -216,16 +249,20 @@ export default function Join() {
                 </div>
               </ScrollReveal>
 
+              {error && (
+                <p className="text-sm text-f1-red mt-4">{error}</p>
+              )}
+
               <button
                 type="submit"
-                disabled={!isValid}
+                disabled={!isValid || submitting}
                 className={`btn-primary w-full sm:w-fit mt-10 ${
-                  !isValid
+                  !isValid || submitting
                     ? 'opacity-50 cursor-not-allowed hover:!bg-f1-red hover:!translate-y-0'
                     : ''
                 }`}
               >
-                Submit Application →
+                {submitting ? 'Submitting…' : 'Submit Application →'}
               </button>
             </form>
           )}

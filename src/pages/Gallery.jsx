@@ -7,99 +7,56 @@ import PageHero from '@/components/ui/PageHero'
 
 const filters = ['All', 'Events', 'Workshops', 'Community', 'Behind the Scenes']
 
-const items = [
-  {
-    id: 1,
-    label: 'Season Opener Watch Party',
-    date: 'Mar 2025',
-    span: 'col-span-2 md:row-span-2',
-    gradient: 'from-[#1a0000] to-f1-carbon',
-  },
-  {
-    id: 2,
-    label: 'Sim Tournament Finals',
-    date: 'Apr 2025',
-    span: '',
-    gradient: 'from-f1-carbon to-[#0a0a1a]',
-  },
-  {
-    id: 3,
-    label: 'Team Briefing',
-    date: 'Feb 2025',
-    span: '',
-    gradient: 'from-[#0d1a0d] to-f1-carbon',
-  },
-  {
-    id: 4,
-    label: 'Hackathon — 2am',
-    date: 'Jan 2025',
-    span: 'md:col-span-2',
-    gradient: 'from-[#1a1000] to-f1-carbon',
-  },
-  {
-    id: 5,
-    label: 'Pit Wall Setup',
-    date: 'Mar 2025',
-    span: 'md:row-span-2',
-    gradient: 'from-[#0a1a0a] to-f1-surface',
-  },
-  {
-    id: 6,
-    label: 'Tech Talk: Aero',
-    date: 'Feb 2025',
-    span: '',
-    gradient: 'from-f1-surface to-f1-carbon',
-  },
-  {
-    id: 7,
-    label: 'Campus Drive',
-    date: 'Sep 2024',
-    span: '',
-    gradient: 'from-[#1a0a00] to-f1-carbon',
-  },
-  {
-    id: 8,
-    label: 'Data Workshop',
-    date: 'Nov 2024',
-    span: '',
-    gradient: 'from-[#00101a] to-f1-surface',
-  },
-  {
-    id: 9,
-    label: 'End of Season 2024',
-    date: 'Dec 2024',
-    span: 'col-span-2',
-    gradient: 'from-[#1a0000] to-[#0a0010]',
-  },
-  {
-    id: 10,
-    label: 'Strategy Session',
-    date: 'Oct 2024',
-    span: '',
-    gradient: 'from-f1-carbon to-[#1a1a00]',
-  },
-  {
-    id: 11,
-    label: 'New Members Intro',
-    date: 'Sep 2024',
-    span: '',
-    gradient: 'from-[#001a10] to-f1-carbon',
-  },
-  {
-    id: 12,
-    label: 'Race Night',
-    date: 'Aug 2024',
-    span: '',
-    gradient: 'from-[#1a0005] to-f1-surface',
-  },
+// Placeholder gradients, cycled by index, for gallery items that don't yet
+// have an uploaded image.
+const FALLBACK_GRADIENTS = [
+  'from-[#1a0000] to-f1-carbon',
+  'from-f1-carbon to-[#0a0a1a]',
+  'from-[#0d1a0d] to-f1-carbon',
+  'from-[#1a1000] to-f1-carbon',
+  'from-[#0a1a0a] to-f1-surface',
+  'from-f1-surface to-f1-carbon',
+  'from-[#1a0a00] to-f1-carbon',
+  'from-[#00101a] to-f1-surface',
+  'from-[#1a0000] to-[#0a0010]',
+  'from-f1-carbon to-[#1a1a00]',
+  'from-[#001a10] to-f1-carbon',
+  'from-[#1a0005] to-f1-surface',
 ]
 
+const SPAN_CLASSES = {
+  normal: '',
+  wide: 'md:col-span-2',
+  tall: 'md:row-span-2',
+  featured: 'col-span-2 md:row-span-2',
+}
+
 export default function Gallery() {
+  const [items, setItems] = useState([])
   const [activeFilter, setActiveFilter] = useState('All')
   const [selectedItem, setSelectedItem] = useState(null)
   const gridRef = useRef(null)
 
-  // Grid items scale in, flowing left→right top→bottom
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch('/api/gallery')
+      const rows = await res.json()
+      setItems(
+        rows.map((row, i) => ({
+          id: row.id,
+          label: row.title,
+          date: row.dateLabel ?? '',
+          span: SPAN_CLASSES[row.span] ?? '',
+          gradient: FALLBACK_GRADIENTS[i % FALLBACK_GRADIENTS.length],
+          imageUrl: row.imageUrl ?? null,
+        }))
+      )
+    }
+    load()
+  }, [])
+
+  // Grid items scale in, flowing left→right top→bottom — re-run once
+  // API data actually populates the grid.
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.from('.gallery-item', {
@@ -117,7 +74,7 @@ export default function Gallery() {
       clearTimeout(t)
       ctx.revert()
     }
-  }, [])
+  }, [items])
 
   return (
     <PageWrapper>
@@ -152,15 +109,23 @@ export default function Gallery() {
             ref={gridRef}
             className="grid grid-cols-2 gap-2 auto-rows-[140px] md:grid-cols-4 md:gap-3 md:auto-rows-[200px]"
           >
-            {items.map((item) => (
+            {items.map((item, i) => (
               <div
                 key={item.id}
                 onClick={() => setSelectedItem(item)}
                 className={`gallery-item relative group cursor-pointer bg-gradient-to-br ${item.gradient} ${item.span} border border-white/5 flex items-center justify-center overflow-hidden`}
               >
-                <span className="font-mono text-6xl text-f1-silver/10">
-                  {String(item.id).padStart(2, '0')}
-                </span>
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.label}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="font-mono text-6xl text-f1-silver/10">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                )}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <span className="f1-heading text-sm text-center px-4">
                     {item.label}
@@ -202,11 +167,19 @@ export default function Gallery() {
               className="w-full h-full md:h-auto md:max-w-3xl flex flex-col justify-center"
             >
               <div
-                className={`w-full flex-1 max-h-[60vh] md:flex-none md:max-h-none md:aspect-video bg-gradient-to-br ${selectedItem.gradient} border border-white/10 flex items-center justify-center`}
+                className={`w-full flex-1 max-h-[60vh] md:flex-none md:max-h-none md:aspect-video bg-gradient-to-br ${selectedItem.gradient} border border-white/10 flex items-center justify-center overflow-hidden`}
               >
-                <span className="font-mono text-8xl text-f1-silver/10">
-                  {String(selectedItem.id).padStart(2, '0')}
-                </span>
+                {selectedItem.imageUrl ? (
+                  <img
+                    src={selectedItem.imageUrl}
+                    alt={selectedItem.label}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="font-mono text-8xl text-f1-silver/10">
+                    {String(items.indexOf(selectedItem) + 1).padStart(2, '0')}
+                  </span>
+                )}
               </div>
               <h3 className="f1-heading text-2xl mt-6">{selectedItem.label}</h3>
               <p className="f1-eyebrow mt-2">{selectedItem.date}</p>

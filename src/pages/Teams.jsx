@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageHero from '@/components/ui/PageHero'
 import SectionHeader from '@/components/ui/SectionHeader'
@@ -53,9 +54,30 @@ function GridSlot({ slot, className = '' }) {
 }
 
 export default function Teams() {
+  const [membersByDept, setMembersByDept] = useState({})
   const gridRef = useRef(null)
   const leftColumn = gridSlots.filter((_, i) => i % 2 === 0)
   const rightColumn = gridSlots.filter((_, i) => i % 2 === 1)
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch('/api/members')
+      const rows = await res.json()
+      const grouped = {}
+      rows.forEach((member) => {
+        if (!grouped[member.departmentCode]) grouped[member.departmentCode] = []
+        grouped[member.departmentCode].push(member)
+      })
+      setMembersByDept(grouped)
+    }
+    load()
+  }, [])
+
+  // Layout only settles once the API data renders, so re-measure ScrollTrigger.
+  useEffect(() => {
+    const t = setTimeout(() => ScrollTrigger.refresh(), 100)
+    return () => clearTimeout(t)
+  }, [membersByDept])
 
   // Starting grid — columns animate in from opposite sides
   useEffect(() => {
@@ -110,14 +132,23 @@ export default function Teams() {
                 {dept.role}
               </p>
               <div className="border-t border-white/5 mt-4 pt-4 flex flex-col gap-3">
-                {[1, 2, 3].map((n) => (
-                  <div key={n} className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full bg-f1-carbon border border-white/10" />
-                    <span className="text-xs text-f1-silver/30">
-                      Member #{n}
-                    </span>
-                  </div>
-                ))}
+                {(membersByDept[dept.code] ?? []).length > 0
+                  ? membersByDept[dept.code].map((member) => (
+                      <div key={member.name} className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-full bg-f1-carbon border border-white/10" />
+                        <span className="text-xs text-f1-silver">
+                          {member.name}
+                        </span>
+                      </div>
+                    ))
+                  : [1, 2, 3].map((n) => (
+                      <div key={n} className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-full bg-f1-carbon border border-white/10" />
+                        <span className="text-xs text-f1-silver/30">
+                          Member #{n}
+                        </span>
+                      </div>
+                    ))}
               </div>
             </TelemetryCard>
           ))}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageHero from '@/components/ui/PageHero'
 import TelemetryCard from '@/components/ui/TelemetryCard'
@@ -8,66 +9,35 @@ import ScrollReveal from '@/components/ui/ScrollReveal'
 
 const filters = ['All', 'AI/ML', 'Data', 'Strategy', 'Design', 'Open Source']
 
-const projects = [
-  {
-    id: 'PRJ-001',
-    tag: 'AI / ML',
-    status: 'ACTIVE',
-    variant: 'active',
-    title: 'Race Predictor',
-    desc: 'ML model predicting F1 race outcomes using historical telemetry, qualifying pace, weather, and circuit characteristics.',
-    tech: ['Python', 'scikit-learn', 'Pandas'],
-  },
-  {
-    id: 'PRJ-002',
-    tag: 'DATA',
-    status: 'ACTIVE',
-    variant: 'active',
-    title: 'Telemetry Dashboard',
-    desc: 'Live driver performance dashboard styled after actual F1 pit wall screens. Lap delta, tyre deg, sector splits, DRS usage.',
-    tech: ['React', 'D3.js', 'FastAPI'],
-  },
-  {
-    id: 'PRJ-003',
-    tag: 'STRATEGY',
-    status: 'ACTIVE',
-    variant: 'active',
-    title: 'Pit Stop Simulator',
-    desc: 'Race strategy tool modelling tyre degradation curves, undercut windows, safety car probability, and VCS impact.',
-    tech: ['Python', 'NumPy', 'Streamlit'],
-  },
-  {
-    id: 'PRJ-004',
-    tag: 'AI / GAME',
-    status: 'PLANNED',
-    variant: 'planned',
-    title: 'Fantasy F1 Optimizer',
-    desc: 'AI-powered Fantasy F1 team selector trained on driver form, circuit fit, and historical points-per-cost data.',
-    tech: ['Python', 'TensorFlow', 'React'],
-  },
-  {
-    id: 'PRJ-005',
-    tag: 'OPEN SOURCE',
-    status: 'PLANNED',
-    variant: 'planned',
-    title: 'F1 Data Toolkit',
-    desc: 'Python library for scraping, cleaning, and analysing historical F1 timing and telemetry data. Ergast + FastF1 wrapper.',
-    tech: ['Python', 'FastF1', 'GitHub'],
-  },
-  {
-    id: 'PRJ-006',
-    tag: 'DESIGN',
-    status: 'PLANNED',
-    variant: 'planned',
-    title: 'Livery Generator',
-    desc: 'Interactive tool to design and preview custom F1 car liveries with Chitkara University branding.',
-    tech: ['React', 'Canvas API', 'Figma'],
-  },
-]
-
 export default function Projects() {
+  const [projects, setProjects] = useState([])
   const [activeFilter, setActiveFilter] = useState('All')
   const filterRef = useRef(null)
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch('/api/projects')
+      const rows = await res.json()
+      setProjects(
+        rows.map((row) => ({
+          id: row.projectId,
+          tag: row.tag,
+          status: row.status.toUpperCase(),
+          variant: row.status,
+          title: row.title,
+          desc: row.description,
+          tech: row.techStack ?? [],
+        }))
+      )
+    }
+    load()
+  }, [])
+
+  // Layout only settles once the API data renders, so re-measure ScrollTrigger.
+  useEffect(() => {
+    const t = setTimeout(() => ScrollTrigger.refresh(), 100)
+    return () => clearTimeout(t)
+  }, [projects])
 
   // Filter bar — stagger in on mount (visible immediately below hero)
   useEffect(() => {

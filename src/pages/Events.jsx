@@ -1,73 +1,43 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageHero from '@/components/ui/PageHero'
 import TelemetryCard from '@/components/ui/TelemetryCard'
 import Badge from '@/components/ui/Badge'
 
-const events = [
-  {
-    round: '01',
-    title: 'Watch Party — Bahrain GP',
-    status: 'COMPLETED',
-    variant: 'completed',
-    type: 'Community',
-    date: '16 Mar 2025',
-    desc: 'Live screening of the Bahrain Grand Prix with expert commentary and pub quiz.',
-  },
-  {
-    round: '02',
-    title: 'Simulator Tournament',
-    status: 'COMPLETED',
-    variant: 'completed',
-    type: 'Competition',
-    date: '12 Apr 2025',
-    desc: 'F1 sim racing tournament — 32 participants, 4 brackets, 1 champion.',
-  },
-  {
-    round: '03',
-    title: 'Tech Talk: Aerodynamics',
-    status: 'UPCOMING',
-    variant: 'upcoming',
-    type: 'Learning',
-    date: '24 May 2025',
-    desc: 'Deep dive into F1 aerodynamic principles, CFD simulation, and DRS mechanics.',
-  },
-  {
-    round: '04',
-    title: 'Data Analytics Workshop',
-    status: 'UPCOMING',
-    variant: 'upcoming',
-    type: 'Workshop',
-    date: '21 Jun 2025',
-    desc: 'Hands-on session analysing real F1 telemetry data using Python and FastF1.',
-  },
-  {
-    round: '05',
-    title: 'Strategy Hackathon',
-    status: 'UPCOMING',
-    variant: 'upcoming',
-    type: 'Hackathon',
-    date: '19 Jul 2025',
-    desc: '24-hour hackathon building F1 strategy tools, race predictors, and data visualisations.',
-  },
-  {
-    round: '06',
-    title: 'End of Season Showcase',
-    status: 'TBD',
-    variant: 'tbd',
-    type: 'Community',
-    date: 'Nov 2025',
-    desc: 'Season retrospective, project demos, awards ceremony, and Season 2026 reveal.',
-  },
-]
-
-const COMPLETED_ROUNDS = 2
-
 export default function Events() {
+  const [events, setEvents] = useState([])
   const sectionRef = useRef(null)
   const progressRef = useRef(null)
   const listRef = useRef(null)
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch('/api/events')
+      const rows = await res.json()
+      setEvents(
+        rows.map((row) => ({
+          round: String(row.round).padStart(2, '0'),
+          title: row.title,
+          status: row.status.toUpperCase(),
+          variant: row.status,
+          type: row.type,
+          date: row.dateLabel,
+          desc: row.description,
+        }))
+      )
+    }
+    load()
+  }, [])
+
+  const completedRounds = events.filter((e) => e.variant === 'completed').length
+
+  // Layout only settles once the API data renders, so re-measure ScrollTrigger.
+  useEffect(() => {
+    const t = setTimeout(() => ScrollTrigger.refresh(), 100)
+    return () => clearTimeout(t)
+  }, [events])
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -117,20 +87,25 @@ export default function Events() {
             <div className="flex items-center justify-between mb-4">
               <span className="f1-eyebrow">Season Progress</span>
               <span className="f1-mono">
-                {COMPLETED_ROUNDS} of {events.length} Rounds Complete
+                {completedRounds} of {events.length} Rounds Complete
               </span>
             </div>
             <div className="relative h-1 bg-f1-surface">
               <div
                 ref={progressRef}
-                className="absolute inset-y-0 left-0 w-[33%] bg-f1-red"
+                className="absolute inset-y-0 left-0 bg-f1-red"
+                style={{
+                  width: events.length
+                    ? `${(completedRounds / events.length) * 100}%`
+                    : '0%',
+                }}
               />
               <div className="absolute inset-0 flex items-center justify-between">
                 {events.map((event, i) => (
                   <span
                     key={event.round}
                     className={`progress-dot w-3 h-3 md:w-2.5 md:h-2.5 rounded-full ${
-                      i < COMPLETED_ROUNDS
+                      i < completedRounds
                         ? 'bg-f1-red'
                         : 'bg-f1-carbon border border-white/20'
                     }`}

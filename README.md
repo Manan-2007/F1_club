@@ -30,7 +30,7 @@ dark carbon-fibre aesthetic, 3D hero with mouse-driven parallax, live
 telemetry-inspired UI, and motorsport-themed interactions throughout.
 
 Built by **Manan Kochhar**.
-Frontend only — backend integration is the next phase (see [Backend Work Needed](#backend-work-needed)).
+Backed by Neon Postgres via Vercel serverless functions (see [Backend](#backend)).
 
 ---
 
@@ -94,9 +94,9 @@ The app is a React Router SPA with seven routes (`/`, `/about`, `/teams`,
   Strategist, Media, Operations) whose cards stagger in, followed by a form —
   Full Name, University Email, Year of Study (1st–4th), "Why F1 Chitkara?"
   textarea, and an optional Link. The submit button stays disabled until a role
-  and all required fields are filled. On submit it shows a success state
-  ("Application Received · STATUS: UNDER REVIEW"). The actual Firestore write is
-  left for the backend partner.
+  and all required fields are filled. On submit it posts to `/api/applications`,
+  which validates and inserts the row into Neon, then shows a success state
+  ("Application Received · STATUS: UNDER REVIEW").
 
 ### Hero Section
 
@@ -376,33 +376,32 @@ npm install
 
 # Copy environment variables
 cp .env.example .env.local
-# Fill in your Firebase credentials in .env.local
+# Fill in your Neon connection string in .env.local
 
-# Start development server
-npm run dev
+# Push the schema and seed some data
+npm run db:push
+npm run seed
+
+# Start frontend + API together
+npx vercel dev
 ```
 
-Open http://localhost:5173
+Open http://localhost:3000 (the port `vercel dev` prints — plain `npm run dev`
+only serves the frontend and won't resolve `/api/*` calls).
 
 ### Environment Variables
 
-All six variables come from `.env.example` and are Firebase Web-app credentials
-(intended to be read at build time via `import.meta.env`):
-
 ```env
-VITE_FIREBASE_API_KEY=             # Firebase project API key
-VITE_FIREBASE_AUTH_DOMAIN=         # Firebase auth domain
-VITE_FIREBASE_PROJECT_ID=          # Firebase project ID
-VITE_FIREBASE_STORAGE_BUCKET=      # Firebase storage bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID= # FCM sender ID
-VITE_FIREBASE_APP_ID=              # Firebase app ID
+DATABASE_URL=   # Neon Postgres connection string
 ```
 
-Get these values from: https://console.firebase.google.com
-→ Your project → Project Settings → Your apps → Web app
+Get this from: https://console.neon.tech → your project → Connection Details.
+This variable is read server-side only, by `db/client.js` and the scripts in
+`api/` — it is deliberately **not** prefixed `VITE_`, since that would bundle
+it into client-side JS and leak the connection string to the browser.
 
-> Note: the `firebase` package is not installed yet and no code currently reads
-> these variables — they're placeholders for the backend integration phase.
+See [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md) for the full schema, API route
+reference, and setup steps.
 
 ### Build for Production
 
@@ -420,8 +419,8 @@ The site is configured for Vercel. To deploy:
 
 1. Push to GitHub
 2. Connect the repo at https://vercel.com/new
-3. Add all `.env.local` values as Environment Variables in the Vercel dashboard
-4. Deploy — Vercel auto-detects the Vite config
+3. Add `DATABASE_URL` as an Environment Variable in the Vercel dashboard
+4. Deploy — Vercel auto-detects the Vite config and the `api/` functions
 
 The `vercel.json` handles:
 
@@ -450,211 +449,71 @@ replaced it (on capable devices) with the real 3D hero: a `@react-three/fiber`
 canvas loading a GLB car, a runtime auto-fit transform, a dark-garage lighting
 rig, and a lerped camera. **Phase 6** was polish — the cursor spotlight, the
 easter eggs, the responsive / touch / reduced-motion passes, capability gating so
-mobile never downloads the 3 MB model, and the Vercel + Firestore-schema
-groundwork for the backend partner.
+mobile never downloads the 3 MB model, and the groundwork for the backend
+partner. **Phase 7** wired all six pages to a Neon Postgres backend through
+Drizzle ORM and Vercel serverless functions.
 
 ---
 
 ## Known Issues + Limitations
 
-- **Join form is not wired to a backend** — on submit it only flips a local
-  `submitted` state to show the success card; no data is persisted or logged
-  (a comment marks where the Firestore write goes).
-- **Gallery images are placeholders** — the 12 tiles are CSS gradients with
-  numbered labels, pending Firebase Storage images.
-- **Team members are placeholders** — department cards show generic "Member #n"
-  slots and the Starting Grid roles are hardcoded.
-- **All page data is hardcoded** — Events, Projects, Teams, Home stats, and
-  Gallery items are in-file arrays awaiting Firestore.
+- **Gallery images are placeholders** — the 12 seeded rows have no
+  `image_url`/`thumb_url` yet, so tiles still render as CSS gradients with
+  numbered labels until real photos are uploaded and their URLs saved.
+- **Team members table is empty** — department cards fall back to generic
+  "Member #n" placeholder slots until the real roster is seeded into
+  `members`, and the Starting Grid recruitment slots are still hardcoded
+  (they're recruitment copy, not roster data).
 - **Filter bars don't filter** — the Projects and Gallery category chips track
   active state but don't yet filter results.
 - **Footer social links are `#` placeholders** — Instagram / LinkedIn / GitHub
   aren't set.
-- **No `firebase` dependency installed** — the `.env` variables are declared but
-  unused; `src/lib/firebase.js` still needs to be created.
+- **No admin panel yet** — `applications` and `members` can only be managed by
+  querying Neon directly (`npm run db:studio`) until Phase 8 builds `/admin`.
 - **3D quality depends on the GLB asset** and requires runtime network access to
   fetch the `night` HDRI environment map from a CDN.
 - **No LICENSE file** and no automated tests are present.
 
 ---
 
-## Backend Work Needed
+## Backend
 
-This section is for the backend partner. The full database schema is in
-[`FIRESTORE_SCHEMA.md`](FIRESTORE_SCHEMA.md). Here is a summary of what needs to
-be built.
+The backend is [Neon](https://neon.tech) (serverless Postgres) queried through
+[Drizzle ORM](https://orm.drizzle.team), fronted by Vercel serverless
+functions under `api/` — the browser talks to `/api/*`, never to Postgres
+directly. Full schema, API route reference, and setup steps are in
+[`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md).
 
-### Setup checklist
+All six pages (Events, Projects, Teams, Gallery, Home stats, Join) are wired
+to their respective `/api/*` routes — no more hardcoded arrays. `members` and
+`applications` start empty; `members` needs the real club roster, and
+`applications` fills up from Join form submissions.
+
+### Local setup
 
 ```
-[ ] Create Firebase project at console.firebase.google.com
-[ ] Enable Firestore (Native mode, asia-south1 region)
-[ ] Enable Firebase Storage
-[ ] Enable Firebase Authentication (Email/Password)
-[ ] Copy .env.example → .env.local and fill credentials
-[ ] Give credentials to frontend (for .env.local)
-[ ] Deploy Firestore security rules from FIRESTORE_SCHEMA.md
+[ ] Create a Neon project at console.neon.tech
+[ ] Copy the connection string into .env.local as DATABASE_URL
+[ ] npm run db:push   # applies db/schema.js to the database
+[ ] npm run seed      # seeds events, projects, gallery, site_config
+[ ] npx vercel dev    # runs frontend + /api together locally
 ```
 
-### Collections to create and seed
+`npm run dev` (plain Vite) does not serve `/api` — use `npx vercel dev`
+locally so `fetch('/api/...')` calls resolve.
 
-| Collection | Path | What to seed |
-|-----------|------|-------------|
-| events | `/events` | The 6 rounds currently hardcoded in `Events.jsx` (round, title, type, status, date, location, description). |
-| projects | `/projects` | The 6 projects in `Projects.jsx` (projectId, title, tag, status, tech stack, description; mark the 3 `ACTIVE` ones featured). |
-| members | `/members` | Real club members grouped by department (departmentCode P1–P6) to replace the placeholder slots in `Teams.jsx`. |
-| gallery | `/gallery` | 12+ gallery items; upload the actual images to Firebase Storage and store the URLs (replaces the gradient tiles in `Gallery.jsx`). |
-| siteConfig | `/siteConfig/main` | Single config doc — season year/status, announcement, and the Home `stats` object (members, projects, events, seasons). |
-| applications | `/applications` | Empty — populated by the Join form. |
+### Admin panel (not yet built)
 
-### Frontend integration points
-
-Each page currently ships hardcoded arrays; here's exactly where Firestore plugs
-in (Firebase v9 modular SDK).
-
-**Events page** (`src/pages/Events.jsx`)
-Currently: hardcoded array of 6 events.
-Needs: Firestore query to `/events`, ordered by `round` ASC.
-
-```js
-import { useEffect, useState } from 'react'
-import { collection, getDocs, query, orderBy } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
-
-const [events, setEvents] = useState([])
-
-useEffect(() => {
-  const load = async () => {
-    const q = query(collection(db, 'events'), orderBy('round', 'asc'))
-    const snap = await getDocs(q)
-    setEvents(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-  }
-  load()
-}, [])
-```
-
-**Projects page** (`src/pages/Projects.jsx`)
-Currently: hardcoded array of 6 projects.
-Needs: Firestore query to `/projects` where `status == 'active'`.
-
-```js
-const q = query(
-  collection(db, 'projects'),
-  where('status', '==', 'active'),
-  orderBy('order', 'asc')
-)
-const snap = await getDocs(q)
-setProjects(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-```
-
-**Teams page** (`src/pages/Teams.jsx`)
-Currently: hardcoded department list + placeholder member slots.
-Needs: Firestore query to `/members`, grouped by `department`.
-
-```js
-const q = query(
-  collection(db, 'members'),
-  where('active', '==', true),
-  orderBy('department', 'asc'),
-  orderBy('order', 'asc')
-)
-const snap = await getDocs(q)
-// then group the results by member.department for each department card
-```
-
-**Gallery page** (`src/pages/Gallery.jsx`)
-Currently: placeholder gradient tiles.
-Needs: Firestore query to `/gallery` + Firebase Storage URLs for images.
-
-```js
-const q = query(collection(db, 'gallery'), orderBy('order', 'asc'), limit(24))
-const snap = await getDocs(q)
-setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-// render item.imageUrl / item.thumbUrl instead of the gradient tiles
-```
-
-**Home page stats** (`src/pages/Home.jsx`)
-Currently: hardcoded numbers (`50+`, `12`, `6`, `3`).
-Needs: Firestore read from `/siteConfig/main` → `stats` object.
-
-```js
-import { doc, getDoc } from 'firebase/firestore'
-
-const snap = await getDoc(doc(db, 'siteConfig', 'main'))
-const { stats } = snap.data() // { members, projects, events, seasons }
-```
-
-**Join form** (`src/pages/Join.jsx`)
-Currently: `handleSubmit` only sets local `submitted` state.
-Needs: `addDoc` to `/applications` on submit (map `form.fullName` → `name`,
-`selectedRole` → `role`, `form.link` → `link`).
-
-```js
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
-
-const handleSubmit = async (e) => {
-  e.preventDefault()
-  if (!isValid) return
-  await addDoc(collection(db, 'applications'), {
-    name:        form.fullName,
-    email:       form.email,
-    year:        form.year,
-    role:        selectedRole.toLowerCase(), // map to enum: developer|designer|data|strategist|media|operations
-    why:         form.why,
-    link:        form.link || null,
-    status:      'pending',
-    notes:       null,
-    submittedAt: serverTimestamp(),
-    reviewedAt:  null,
-    reviewedBy:  null,
-  })
-  setSubmitted(true)
-}
-```
-
-### Firebase SDK setup (for backend partner reference)
-
-Once the Firebase project is created, the frontend needs this in a new file
-`src/lib/firebase.js` (and `npm install firebase`):
-
-```js
-import { initializeApp }    from 'firebase/app'
-import { getFirestore }     from 'firebase/firestore'
-import { getStorage }       from 'firebase/storage'
-import { getAuth }          from 'firebase/auth'
-
-const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
-}
-
-const app = initializeApp(firebaseConfig)
-export const db      = getFirestore(app)
-export const storage = getStorage(app)
-export const auth    = getAuth(app)
-```
-
-### Admin panel (Phase 7)
-
-An admin panel is needed to manage dynamic content. Suggested route: `/admin`
-(protected by Firebase Auth). Pages needed:
+An admin panel for managing dynamic content without touching code — suggested
+route `/admin`, needing its own auth layer (there's no Firebase Auth
+equivalent wired up yet). Pages needed:
 
 - `/admin/events` — create, edit, delete events
-- `/admin/projects` — manage projects + upload cover images
-- `/admin/members` — manage team members + upload avatars
-- `/admin/gallery` — upload photos to Firebase Storage, reorder grid
+- `/admin/projects` — manage projects
+- `/admin/members` — manage team members
+- `/admin/gallery` — upload photos, reorder grid
 - `/admin/applications` — review Join form submissions, accept/reject
-- `/admin/config` — edit siteConfig (stats, season status, announcement)
-
-The frontend is already structured to accept data from Firestore — replacing the
-hardcoded arrays with Firestore queries is the backend task. See
-[`FIRESTORE_SCHEMA.md`](FIRESTORE_SCHEMA.md) for the exact data shapes each page
-expects.
+- `/admin/config` — edit `site_config` (stats, season status, announcement)
 
 ---
 
