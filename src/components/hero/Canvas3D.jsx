@@ -8,9 +8,7 @@ import CameraRig   from './CameraRig'
 import F1CarModel  from './F1CarModel'
 import ModelLoader from './ModelLoader'
 
-// DOM overlay shown while the GLB (and HDRI) stream in. useProgress
-// subscribes to three's DefaultLoadingManager, so it works outside the
-// Canvas — unlike a bare <Suspense> wrapper in the DOM tree.
+// DOM overlay shown while the GLB streams in.
 function LoaderOverlay() {
   const { active } = useProgress()
   return active ? <ModelLoader /> : null
@@ -23,10 +21,10 @@ export default function Canvas3D({ mouseRef }) {
         shadows
         dpr={[1, 2]}
         camera={{
-          fov:      38, // narrower FOV = more compressed/cinematic
+          fov:      38,
           near:     0.1,
           far:      100,
-          position: [-1.5, 2.2, 5.5],
+          position: [-0.5, 1.8, 5.5],
         }}
         gl={{
           antialias:           true,
