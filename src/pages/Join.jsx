@@ -69,7 +69,7 @@ export default function Join() {
     form.fullName.trim() &&
     form.email.trim() &&
     form.year &&
-    form.why.trim()
+    form.why.trim().length >= 20
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -89,10 +89,17 @@ export default function Join() {
           link: form.link || null,
         }),
       })
-      if (!res.ok) throw new Error('Request failed')
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.error || 'Request failed')
+      }
       setSubmitted(true)
     } catch (err) {
-      setError('Something went wrong submitting your application. Please try again.')
+      setError(
+        err.message && err.message !== 'Request failed'
+          ? err.message
+          : 'Something went wrong submitting your application. Please try again.'
+      )
       console.error(err)
     } finally {
       setSubmitting(false)
@@ -221,7 +228,7 @@ export default function Join() {
 
                 <div className="form-field flex flex-col gap-2">
                   <label htmlFor="why" className="f1-eyebrow">
-                    Why F1 Chitkara?
+                    Why F1 Chitkara? <span className="!text-f1-silver/40">(min. 20 characters)</span>
                   </label>
                   <textarea
                     id="why"
@@ -232,6 +239,9 @@ export default function Join() {
                     onChange={updateField('why')}
                     className={`${inputClasses} resize-none`}
                   />
+                  <p className="text-xs text-f1-silver/40">
+                    {form.why.trim().length}/20
+                  </p>
                 </div>
 
                 <div className="form-field flex flex-col gap-2">
