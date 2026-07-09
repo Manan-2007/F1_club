@@ -33,7 +33,7 @@ export default function HeroText() {
     <div ref={containerRef} className="relative z-10 max-w-3xl mx-auto md:mx-0">
       {/* Eyebrow */}
       <p className="hero-eyebrow f1-eyebrow !text-f1-silver/50 mb-8">
-        Chitkara University · Est. 2024
+        Chitkara University · Est. 2026
       </p>
 
       {/* Main headline — clamps hold down to 320px viewports */}
