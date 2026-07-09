@@ -5,7 +5,6 @@ const navLinks = [
   { label: 'Teams', to: '/teams' },
   { label: 'Projects', to: '/projects' },
   { label: 'Events', to: '/events' },
-  { label: 'Gallery', to: '/gallery' },
   { label: 'Join', to: '/join' },
 ]
 
@@ -31,7 +30,11 @@ export default function Footer() {
             Where speed meets innovation. Engineering, strategy, design and
             technology — united by racing.
           </p>
-          <span className="f1-eyebrow">Chitkara University</span>
+          <img
+            src="/chitkara.png"
+            alt="Chitkara University"
+            className="h-8 w-auto object-contain opacity-80 self-start"
+          />
         </div>
 
         {/* Navigation */}

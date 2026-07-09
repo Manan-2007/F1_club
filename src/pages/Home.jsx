@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import PageWrapper from '@/components/layout/PageWrapper'
@@ -9,39 +9,21 @@ import Badge from '@/components/ui/Badge'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import { useCountUp } from '@/hooks/useCountUp'
 
-const DEFAULT_STATS = [
-  { value: '50', suffix: '+', label: 'Active Members' },
-  { value: '12', suffix: '', label: 'Projects Built' },
-  { value: '6', suffix: '', label: 'Events Completed' },
-  { value: '3', suffix: '', label: 'Seasons Running' },
+const STATS = [
+  { value: '16+', label: 'Active Members'    },
+  { value: '12',  label: 'Projects Planned'  },
+  { value: '6',   label: 'Events Upcoming'   },
+  { value: '1',   label: 'Season Running'    },
 ]
 
-const featuredEvents = [
-  { round: '01', title: 'Watch Party', type: 'Community', date: 'Mar 2025' },
-  { round: '02', title: 'Simulator Tournament', type: 'Competition', date: 'Apr 2025' },
-  { round: '03', title: 'Tech Talk', type: 'Learning', date: 'May 2025' },
+const FEATURED_EVENTS = [
+  { round: '01', title: 'Watch Party',  type: 'Community',   date: 'Aug 2026' },
+  { round: '02', title: 'F1 Carnival',  type: 'Festival',    date: 'Sep 2026' },
+  { round: '03', title: 'Tech Talk',    type: 'Learning',    date: 'Oct 2026' },
 ]
 
-const featuredProjects = [
-  {
-    tag: 'AI / ML',
-    title: 'Race Predictor',
-    desc: 'ML model predicting F1 race outcomes using historical data and weather inputs.',
-  },
-  {
-    tag: 'DATA',
-    title: 'Telemetry Dashboard',
-    desc: 'Real-time driver performance analytics rendered as actual F1 telemetry screens.',
-  },
-  {
-    tag: 'STRATEGY',
-    title: 'Pit Stop Simulator',
-    desc: 'Strategy tool modelling tyre degradation and undercut windows race by race.',
-  },
-]
-
-function StatValue({ value, suffix }) {
-  const { ref, display } = useCountUp(value, suffix)
+function StatValue({ value }) {
+  const { ref, display } = useCountUp(value, value.replace(/[0-9]/g, ''))
   return (
     <span ref={ref} className="text-5xl font-bold text-f1-white">
       {display}
@@ -50,23 +32,7 @@ function StatValue({ value, suffix }) {
 }
 
 export default function Home() {
-  const [stats, setStats] = useState(DEFAULT_STATS)
   const introRef = useRef(null)
-
-  useEffect(() => {
-    const load = async () => {
-      const res = await fetch('/api/site-config')
-      if (!res.ok) return
-      const { stats: s } = await res.json()
-      setStats([
-        { value: String(s.members), suffix: '+', label: 'Active Members' },
-        { value: String(s.projects), suffix: '', label: 'Projects Built' },
-        { value: String(s.events), suffix: '', label: 'Events Completed' },
-        { value: String(s.seasons), suffix: '', label: 'Seasons Running' },
-      ])
-    }
-    load()
-  }, [])
 
   // Club intro — columns slide in from opposite sides
   useEffect(() => {
@@ -125,9 +91,9 @@ export default function Home() {
           </div>
 
           <div className="intro-right grid grid-cols-2 gap-4 md:gap-10">
-            {stats.map((stat) => (
+            {STATS.map((stat) => (
               <div key={stat.label} className="stat-block">
-                <StatValue value={stat.value} suffix={stat.suffix} />
+                <StatValue value={stat.value} />
                 <p className="f1-eyebrow !text-f1-silver/60 mt-2">
                   {stat.label}
                 </p>
@@ -151,7 +117,7 @@ export default function Home() {
             start="top 85%"
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
-            {featuredEvents.map((event) => (
+            {FEATURED_EVENTS.map((event) => (
               <TelemetryCard key={event.round} className="event-card p-8 min-h-[120px]">
                 <div className="flex items-center justify-between">
                   <span className="f1-mono !text-f1-red/60">
@@ -169,36 +135,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECTION 4: FEATURED PROJECTS */}
-      <section className="py-24">
-        <div className="f1-container">
-          <SectionHeader
-            eyebrow="Pit Lane"
-            title="Featured Projects"
-            action={{ label: 'All Projects →', to: '/projects' }}
-          />
-          <ScrollReveal
-            target=".project-card"
-            stagger={0.12}
-            start="top 85%"
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            {featuredProjects.map((project) => (
-              <TelemetryCard key={project.title} className="project-card p-8 min-h-[120px]">
-                <span className="f1-eyebrow !text-f1-silver/40">
-                  {project.tag}
-                </span>
-                <h3 className="f1-heading text-xl mt-3">{project.title}</h3>
-                <p className="text-sm text-f1-silver font-light leading-relaxed mt-3">
-                  {project.desc}
-                </p>
-              </TelemetryCard>
-            ))}
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* SECTION 5: JOIN CTA */}
+      {/* SECTION 4: JOIN CTA */}
       <section className="py-32 relative">
         <div className="f1-divider absolute top-0 left-0" />
         <div className="f1-divider absolute bottom-0 left-0" />

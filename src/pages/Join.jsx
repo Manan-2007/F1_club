@@ -5,24 +5,14 @@ import PageWrapper from '@/components/layout/PageWrapper'
 import PageHero from '@/components/ui/PageHero'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 
-const roles = [
-  { icon: 'D', name: 'Developer', desc: 'Web · App · Systems' },
-  { icon: 'UI', name: 'Designer', desc: 'UI/UX · Graphic · Motion' },
-  { icon: 'AI', name: 'Data / AI', desc: 'ML · Analytics · Viz' },
-  { icon: 'S', name: 'Strategist', desc: 'Race · Business · Research' },
-  { icon: 'M', name: 'Media', desc: 'Content · Photo · Video' },
-  { icon: 'O', name: 'Operations', desc: 'Events · Logistics · Comms' },
+const ROLES = [
+  { id: 'technical',      label: 'Technical',       desc: 'Development & Engineering' },
+  { id: 'media',          label: 'Media',            desc: 'Coverage & Photography'   },
+  { id: 'graphics',       label: 'Graphics',         desc: 'Visual Design & Branding' },
+  { id: 'content',        label: 'Content',          desc: 'Writing & Strategy'       },
+  { id: 'video-editing',  label: 'Video Editing',    desc: 'Editing & Production'     },
+  { id: 'operations',     label: 'Operations',       desc: 'Events & Logistics'       },
 ]
-
-// Maps role card display names to the `applications.role` enum.
-const ROLE_TO_ENUM = {
-  Developer: 'developer',
-  Designer: 'designer',
-  'Data / AI': 'data',
-  Strategist: 'strategist',
-  Media: 'media',
-  Operations: 'operations',
-}
 
 const inputClasses =
   'bg-f1-surface border border-white/10 text-f1-white px-4 py-3 text-sm placeholder:text-f1-silver/30 focus:border-f1-red focus:outline-none transition-colors duration-200 w-full'
@@ -30,16 +20,27 @@ const inputClasses =
 export default function Join() {
   const [selectedRole, setSelectedRole] = useState(null)
   const [submitted, setSubmitted] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState(null)
   const [form, setForm] = useState({
     fullName: '',
+    rollNo: '',
     email: '',
+    course: '',
     year: '',
     why: '',
-    link: '',
   })
+  const [links, setLinks] = useState(['']) // dynamic link fields
   const rolesRef = useRef(null)
+
+  const addLink = () => setLinks(prev => [...prev, ''])
+  const updateLink = (index, value) => {
+    const updated = [...links]
+    updated[index] = value
+    setLinks(updated)
+  }
+  const removeLink = (index) => {
+    if (links.length === 1) return // always keep at least one
+    setLinks(prev => prev.filter((_, i) => i !== index))
+  }
 
   // Role cards stagger in on mount (top of page, no ScrollTrigger)
   useEffect(() => {
@@ -67,43 +68,22 @@ export default function Join() {
   const isValid =
     selectedRole &&
     form.fullName.trim() &&
+    form.rollNo.trim() &&
     form.email.trim() &&
+    form.course.trim() &&
     form.year &&
     form.why.trim().length >= 20
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     if (!isValid) return
-    setSubmitting(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/applications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.fullName,
-          email: form.email,
-          year: form.year,
-          role: ROLE_TO_ENUM[selectedRole],
-          why: form.why,
-          link: form.link || null,
-        }),
-      })
-      if (!res.ok) {
-        const body = await res.json().catch(() => null)
-        throw new Error(body?.error || 'Request failed')
-      }
-      setSubmitted(true)
-    } catch (err) {
-      setError(
-        err.message && err.message !== 'Request failed'
-          ? err.message
-          : 'Something went wrong submitting your application. Please try again.'
-      )
-      console.error(err)
-    } finally {
-      setSubmitting(false)
-    }
+    // TODO: Wire up to /api/applications once the backend accepts the new fields
+    console.log('Application submitted:', {
+      role: selectedRole,
+      ...form,
+      links: links.filter(l => l.trim() !== ''),
+    })
+    setSubmitted(true)
   }
 
   return (
@@ -133,25 +113,22 @@ export default function Join() {
               <div ref={rolesRef} className="mb-10">
                 <p className="f1-eyebrow mb-4">Select Your Role</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {roles.map((role) => (
+                  {ROLES.map((role) => (
                     <div
-                      key={role.name}
-                      onClick={() => setSelectedRole(role.name)}
+                      key={role.id}
+                      onClick={() => setSelectedRole(role.id)}
                       className={`role-card telemetry-card p-4 cursor-pointer ${
-                        selectedRole === role.name ? '!border-f1-red' : ''
+                        selectedRole === role.id ? '!border-f1-red' : ''
                       }`}
                     >
-                      <div className="w-8 h-8 bg-f1-carbon flex items-center justify-center mb-3">
-                        <span className="f1-mono">{role.icon}</span>
-                      </div>
                       <p
                         className={`font-semibold text-sm ${
-                          selectedRole === role.name
+                          selectedRole === role.id
                             ? 'text-f1-red'
                             : 'text-f1-white'
                         }`}
                       >
-                        {role.name}
+                        {role.label}
                       </p>
                       <p className="text-xs text-f1-silver/60 mt-0.5">
                         {role.desc}
@@ -184,6 +161,21 @@ export default function Join() {
                 </div>
 
                 <div className="form-field flex flex-col gap-2">
+                  <label htmlFor="rollNo" className="f1-eyebrow">
+                    Roll Number
+                  </label>
+                  <input
+                    id="rollNo"
+                    type="text"
+                    required
+                    placeholder="e.g. 2310992123"
+                    value={form.rollNo}
+                    onChange={updateField('rollNo')}
+                    className={inputClasses}
+                  />
+                </div>
+
+                <div className="form-field flex flex-col gap-2">
                   <label htmlFor="email" className="f1-eyebrow">
                     University Email
                   </label>
@@ -199,6 +191,21 @@ export default function Join() {
                 </div>
 
                 <div className="form-field flex flex-col gap-2">
+                  <label htmlFor="course" className="f1-eyebrow">
+                    Course Name
+                  </label>
+                  <input
+                    id="course"
+                    type="text"
+                    required
+                    placeholder="e.g. B.E. Computer Science (AI/ML)"
+                    value={form.course}
+                    onChange={updateField('course')}
+                    className={inputClasses}
+                  />
+                </div>
+
+                <div className="form-field flex flex-col gap-2">
                   <label htmlFor="year" className="f1-eyebrow">
                     Year of Study
                   </label>
@@ -208,17 +215,17 @@ export default function Join() {
                       required
                       value={form.year}
                       onChange={updateField('year')}
-                      className={`${inputClasses} appearance-none ${
+                      className={`${inputClasses} appearance-none cursor-pointer ${
                         form.year ? '' : 'text-f1-silver/30'
                       }`}
                     >
                       <option value="" disabled>
-                        Select your year
+                        Select year
                       </option>
-                      <option value="1st Year">1st Year</option>
-                      <option value="2nd Year">2nd Year</option>
-                      <option value="3rd Year">3rd Year</option>
-                      <option value="4th Year">4th Year</option>
+                      <option value="1">1st Year</option>
+                      <option value="2">2nd Year</option>
+                      <option value="3">3rd Year</option>
+                      <option value="4">4th Year</option>
                     </select>
                     <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-f1-silver/50 text-xs">
                       ▾
@@ -234,7 +241,7 @@ export default function Join() {
                     id="why"
                     rows={5}
                     required
-                    placeholder="What would you build here?"
+                    placeholder="Tell us what excites you about F1 Chitkara and what you'd contribute..."
                     value={form.why}
                     onChange={updateField('why')}
                     className={`${inputClasses} resize-none`}
@@ -244,35 +251,68 @@ export default function Join() {
                   </p>
                 </div>
 
-                <div className="form-field flex flex-col gap-2">
-                  <label htmlFor="link" className="f1-eyebrow">
-                    Link <span className="!text-f1-silver/40">(Optional)</span>
-                  </label>
-                  <input
-                    id="link"
-                    type="url"
-                    placeholder="GitHub / Portfolio / LinkedIn"
-                    value={form.link}
-                    onChange={updateField('link')}
-                    className={inputClasses}
-                  />
+                {/* Links — dynamic, add more */}
+                <div className="form-field flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <label className="f1-eyebrow">
+                      Links <span className="!text-f1-silver/30 normal-case tracking-normal text-[10px]">
+                        — GitHub, Portfolio, LinkedIn, etc.
+                      </span>
+                    </label>
+                  </div>
+
+                  {links.map((link, index) => (
+                    <div key={index} className="flex gap-2 items-center">
+                      <input
+                        type="url"
+                        value={link}
+                        onChange={e => updateLink(index, e.target.value)}
+                        placeholder={
+                          index === 0
+                            ? 'https://github.com/yourusername'
+                            : 'https://linkedin.com/in/yourprofile'
+                        }
+                        className={`flex-1 ${inputClasses}`}
+                      />
+                      {links.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeLink(index)}
+                          className="w-10 h-10 border border-white/10 text-f1-silver/50
+                                     hover:border-f1-red hover:text-f1-red transition-colors
+                                     flex items-center justify-center text-lg shrink-0"
+                          aria-label="Remove link"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Add another link */}
+                  <button
+                    type="button"
+                    onClick={addLink}
+                    className="flex items-center gap-2 text-xs text-f1-green/70
+                               hover:text-f1-green transition-colors w-fit"
+                  >
+                    <span className="w-4 h-4 border border-f1-green/40 flex items-center
+                                     justify-center text-f1-green text-sm">+</span>
+                    Add another link
+                  </button>
                 </div>
               </ScrollReveal>
 
-              {error && (
-                <p className="text-sm text-f1-red mt-4">{error}</p>
-              )}
-
               <button
                 type="submit"
-                disabled={!isValid || submitting}
+                disabled={!isValid}
                 className={`btn-primary w-full sm:w-fit mt-10 ${
-                  !isValid || submitting
+                  !isValid
                     ? 'opacity-50 cursor-not-allowed hover:!bg-f1-red hover:!translate-y-0'
                     : ''
                 }`}
               >
-                {submitting ? 'Submitting…' : 'Submit Application →'}
+                Submit Application →
               </button>
             </form>
           )}

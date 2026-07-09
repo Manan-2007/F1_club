@@ -29,26 +29,30 @@ const reasons = [
   },
 ]
 
-const timeline = [
+const TIMELINE = [
   {
-    year: 'Aug 2024',
-    event: 'Club Founded',
-    desc: 'F1 Chitkara established at Chitkara University with 12 founding members.',
+    month:  'Apr 2026',
+    event:  'Club Founded',
+    desc:   'F1 Chitkara established at Chitkara University — 16 founding members, one shared obsession.',
+    status: 'done',
   },
   {
-    year: 'Sep 2024',
-    event: 'First Watch Party',
-    desc: 'Season opener screening — 40+ attendees, live commentary, and quiz.',
+    month:  'May 2026',
+    event:  'Club Promotion',
+    desc:   'Official launch campaign across campus — posters, reels, and the first wave of awareness.',
+    status: 'done',
   },
   {
-    year: 'Jan 2025',
-    event: 'First Hackathon',
-    desc: 'Internal motorsport-themed hackathon. 8 teams, 24 hours, 3 projects shipped.',
+    month:  'May 2026',
+    event:  'Hiring Round',
+    desc:   'Open applications for founding members across Technical, Media, Graphics, Content, and Operations.',
+    status: 'done',
   },
   {
-    year: 'Mar 2025',
-    event: 'Website Launch',
-    desc: "Official digital presence goes live — the site you're on right now.",
+    month:  'Jul 2026',
+    event:  'Website Launch',
+    desc:   'The official F1 Chitkara digital experience goes live — the site you are on right now.',
+    status: 'done',
   },
 ]
 
@@ -94,20 +98,20 @@ export default function About() {
             target=".reveal-p"
             stagger={0.15}
             y={30}
-            className="flex flex-col gap-6"
+            className="flex flex-col"
           >
-            <p className="reveal-p text-f1-silver font-light leading-relaxed text-base md:text-lg">
-              F1 Chitkara was founded in 2024 by a group of students convinced
+            <p className="reveal-p text-f1-silver leading-relaxed mb-5 text-base md:text-lg">
+              F1 Chitkara was founded in 2026 by a group of students convinced
               that Formula 1 was the world&apos;s best engineering classroom —
-              20 races a year of live aerodynamics, real-time data science, and
+              24 races a year of live aerodynamics, real-time data science, and
               decision-making under pressure.
             </p>
-            <p className="reveal-p text-f1-silver font-light leading-relaxed text-base md:text-lg">
+            <p className="reveal-p text-f1-silver leading-relaxed mb-5">
               We study the sport the way engineers do: looking at the data, the
               regulations, the trade-offs. Then we build things with what we
               learn — dashboards, predictors, simulators.
             </p>
-            <p className="reveal-p text-f1-silver font-light leading-relaxed text-base md:text-lg">
+            <p className="reveal-p text-f1-silver leading-relaxed mb-8">
               Whether you&apos;re here for the races, the code, the design, or
               the community, there is a seat on our grid.
             </p>
@@ -162,23 +166,92 @@ export default function About() {
       <section className="py-16">
         <div className="f1-container">
           <SectionHeader eyebrow="Journey" title="How We Got Here" />
-          <div ref={timelineRef} className="relative overflow-hidden">
-            <span
+
+          <div ref={timelineRef} className="relative flex flex-col gap-0 overflow-hidden">
+
+            {/* Vertical line — runs full height */}
+            <div
               ref={lineRef}
-              className="absolute left-[5px] top-2 bottom-10 w-px bg-white/10"
+              className="absolute left-[5px] top-0 bottom-0 w-px"
+              style={{
+                background: 'linear-gradient(to bottom, #E10600 80%, transparent 100%)',
+              }}
             />
-            {timeline.map((item) => (
-              <div key={item.event} className="timeline-entry relative flex gap-8 pb-12">
-                <span className="w-3 h-3 rounded-full bg-f1-red shrink-0 mt-1 relative z-10" />
+
+            {/* Completed timeline entries */}
+            {TIMELINE.map(({ month, event, desc }, i) => (
+              <div
+                key={i}
+                className="timeline-entry flex gap-8 pb-10 relative"
+              >
+                {/* Dot */}
+                <div className="relative shrink-0 mt-1.5">
+                  <div className="w-3 h-3 rounded-full bg-f1-red border-2 border-f1-bg relative z-10" />
+                </div>
+
+                {/* Content */}
                 <div>
-                  <span className="f1-mono">{item.year}</span>
-                  <h3 className="f1-heading text-lg mt-2">{item.event}</h3>
-                  <p className="text-sm text-f1-silver font-light leading-relaxed mt-2 max-w-xl">
-                    {item.desc}
-                  </p>
+                  <span className="f1-mono text-f1-green text-xs mb-1 block">
+                    {month}
+                  </span>
+                  <h3 className="f1-heading text-lg mb-1">{event}</h3>
+                  <p className="text-sm text-f1-silver leading-relaxed">{desc}</p>
                 </div>
               </div>
             ))}
+
+            {/* "Many more to come" — animated continuation */}
+            <div className="timeline-entry flex gap-8 pb-2 relative">
+              {/* Pulsing dot — signals ongoing/future */}
+              <div className="relative shrink-0 mt-1.5">
+                <div className="w-3 h-3 rounded-full border-2 border-f1-red/50 relative z-10 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-f1-red animate-pulse-slow" />
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="pb-4">
+                <span className="f1-mono !text-f1-silver/40 text-xs mb-1 block">
+                  2026 — 2027
+                </span>
+                <h3 className="f1-heading text-lg mb-3 text-f1-silver/60">
+                  Many More to Come
+                </h3>
+                <p className="text-sm text-f1-silver/50 leading-relaxed max-w-xs">
+                  Watch parties, hackathons, tech talks, industry visits,
+                  and a lot more racing — the season has just begun.
+                </p>
+
+                {/* Fading dotted line — visually suggests the list continues */}
+                <div className="flex flex-col gap-2 mt-5">
+                  {[
+                    'F1 Watch Parties',
+                    'Technical Workshops',
+                    'Industry Collaborations',
+                    'Project Launches',
+                  ].map((item, i) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-2"
+                      style={{ opacity: 1 - i * 0.2 }}
+                    >
+                      <div className="w-1 h-1 rounded-full bg-f1-red/40 shrink-0" />
+                      <span className="text-xs text-f1-silver/30 tracking-wide">
+                        {item}
+                      </span>
+                    </div>
+                  ))}
+                  {/* Final fade-out row */}
+                  <div className="flex items-center gap-2 opacity-10">
+                    <div className="w-1 h-1 rounded-full bg-f1-red/20 shrink-0" />
+                    <span className="text-xs text-f1-silver/20 tracking-wide">
+                      And more...
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
