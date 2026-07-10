@@ -24,7 +24,7 @@ const DEPARTMENTS = [
     code: 'P2',
     name: 'Technical',
     role: 'Engineering & Development',
-    color: '!text-f1-green',
+    color: '!text-f1-red',
     showOpenSlots: true,
     members: [
       'Manan Kochhar',
@@ -36,7 +36,7 @@ const DEPARTMENTS = [
     code: 'P3',
     name: 'Media',
     role: 'Content & Race Coverage',
-    color: '!text-f1-silver',
+    color: '!text-f1-red',
     showOpenSlots: true,
     members: [
       'Arshpreet Kaur',
@@ -48,7 +48,7 @@ const DEPARTMENTS = [
     code: 'P4',
     name: 'Graphics',
     role: 'Visual Design & Brand Identity',
-    color: '!text-f1-silver',
+    color: '!text-f1-red',
     showOpenSlots: true,
     members: [
       'Jaisgurnoor Singh',
@@ -61,7 +61,7 @@ const DEPARTMENTS = [
     code: 'P5',
     name: 'Content & Video Editing',
     role: 'Storytelling, Scripts & Video Production',
-    color: '!text-f1-silver',
+    color: '!text-f1-red',
     showOpenSlots: true,
     members: [
       'Aditya Minhas',
@@ -75,7 +75,7 @@ const DEPARTMENTS = [
     code: 'P6',
     name: 'Events & Ops',
     role: 'Planning & Execution',
-    color: '!text-f1-silver',
+    color: '!text-f1-red',
     showOpenSlots: true,
     members: [
       'Ansh',
