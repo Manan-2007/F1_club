@@ -31,27 +31,27 @@ const reasons = [
 
 const TIMELINE = [
   {
-    month:  'Apr 2026',
-    event:  'Club Founded',
-    desc:   'F1 Chitkara established at Chitkara University — 16 founding members, one shared obsession.',
+    month: 'Apr 2026',
+    event: 'Club Founded',
+    desc: 'F1 Chitkara established at Chitkara University — 4 founding members, one shared obsession.',
     status: 'done',
   },
   {
-    month:  'May 2026',
-    event:  'Club Promotion',
-    desc:   'Official launch campaign across campus — posters, reels, and the first wave of awareness.',
+    month: 'May 2026',
+    event: 'Club Promotion',
+    desc: 'Official launch campaign across campus — posters, reels, and the first wave of awareness.',
     status: 'done',
   },
   {
-    month:  'May 2026',
-    event:  'Hiring Round',
-    desc:   'Open applications for founding members across Technical, Media, Graphics, Content, and Operations.',
+    month: 'May 2026',
+    event: 'Hiring Round',
+    desc: 'Open applications for founding members across Technical, Media, Graphics, Content, and Operations.',
     status: 'done',
   },
   {
-    month:  'Jul 2026',
-    event:  'Website Launch',
-    desc:   'The official F1 Chitkara digital experience goes live — the site you are on right now.',
+    month: 'Jul 2026',
+    event: 'Website Launch',
+    desc: 'The official F1 Chitkara digital experience goes live — the site you are on right now.',
     status: 'done',
   },
 ]
