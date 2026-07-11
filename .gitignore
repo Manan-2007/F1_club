@@ -17,6 +17,12 @@ dist-ssr
 .env.*.local
 *.local
 
+# Firebase service account (used only by scripts/seed.js)
+serviceAccountKey.json
+
+# Neon data export — contains applicant emails, keep private
+scripts/neon-export.json
+
 # Leva debug panel (removed in Phase 5 — just in case)
 .leva/
 

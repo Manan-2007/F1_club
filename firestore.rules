@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Anyone can read public collections
+    match /events/{id}     { allow read: if true; allow write: if isAdmin(); }
+    match /projects/{id}   { allow read: if true; allow write: if isAdmin(); }
+    match /members/{id}    { allow read: if true; allow write: if isAdmin(); }
+    match /gallery/{id}    { allow read: if true; allow write: if isAdmin(); }
+    match /siteConfig/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    // Applications — write only (public can submit, only admin can read)
+    match /applications/{id} {
+      allow create: if isValidApplication();
+      allow read, update, delete: if isAdmin();
+    }
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.admin == true;
+    }
+
+    function isValidApplication() {
+      let data = request.resource.data;
+      return data.name is string && data.name.size() > 0
+        && data.email is string && data.email.matches('.*@.*\\..*')
+        && data.role in ['developer','designer','data','strategist','media','operations']
+        && data.why is string && data.why.size() >= 20
+        && data.status == 'pending';
+    }
+  }
+}

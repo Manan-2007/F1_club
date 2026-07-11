@@ -30,7 +30,7 @@ dark carbon-fibre aesthetic, 3D hero with mouse-driven parallax, live
 telemetry-inspired UI, and motorsport-themed interactions throughout.
 
 Built by **Manan Kochhar**.
-Backed by Neon Postgres via Vercel serverless functions (see [Backend](#backend)).
+Backed by Firebase (Firestore) (see [Backend](#backend)).
 
 ---
 
@@ -94,8 +94,8 @@ The app is a React Router SPA with seven routes (`/`, `/about`, `/teams`,
   Strategist, Media, Operations) whose cards stagger in, followed by a form —
   Full Name, University Email, Year of Study (1st–4th), "Why F1 Chitkara?"
   textarea, and an optional Link. The submit button stays disabled until a role
-  and all required fields are filled. On submit it posts to `/api/applications`,
-  which validates and inserts the row into Neon, then shows a success state
+  and all required fields are filled. On submit it writes the application to
+  Firestore (validated by security rules), then shows a success state
   ("Application Received · STATUS: UNDER REVIEW").
 
 ### Hero Section
@@ -376,32 +376,36 @@ npm install
 
 # Copy environment variables
 cp .env.example .env.local
-# Fill in your Neon connection string in .env.local
+# Fill in your Firebase credentials in .env.local
 
-# Push the schema and seed some data
-npm run db:push
+# Seed initial data (needs serviceAccountKey.json — see FIRESTORE_SCHEMA.md)
 npm run seed
 
-# Start frontend + API together
-npx vercel dev
+# Start development server
+npm run dev
 ```
 
-Open http://localhost:3000 (the port `vercel dev` prints — plain `npm run dev`
-only serves the frontend and won't resolve `/api/*` calls).
+Open http://localhost:5173
 
 ### Environment Variables
 
+All six variables come from `.env.example` and are Firebase Web-app credentials
+(read at build time via `import.meta.env`):
+
 ```env
-DATABASE_URL=   # Neon Postgres connection string
+VITE_FIREBASE_API_KEY=             # Firebase project API key
+VITE_FIREBASE_AUTH_DOMAIN=         # Firebase auth domain
+VITE_FIREBASE_PROJECT_ID=          # Firebase project ID
+VITE_FIREBASE_STORAGE_BUCKET=      # Firebase storage bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID= # FCM sender ID
+VITE_FIREBASE_APP_ID=              # Firebase app ID
 ```
 
-Get this from: https://console.neon.tech → your project → Connection Details.
-This variable is read server-side only, by `db/client.js` and the scripts in
-`api/` — it is deliberately **not** prefixed `VITE_`, since that would bundle
-it into client-side JS and leak the connection string to the browser.
+Get these values from: https://console.firebase.google.com
+→ Your project → Project Settings → Your apps → Web app
 
-See [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md) for the full schema, API route
-reference, and setup steps.
+See [`FIRESTORE_SCHEMA.md`](FIRESTORE_SCHEMA.md) for the full schema and
+security rules.
 
 ### Build for Production
 
@@ -419,8 +423,8 @@ The site is configured for Vercel. To deploy:
 
 1. Push to GitHub
 2. Connect the repo at https://vercel.com/new
-3. Add `DATABASE_URL` as an Environment Variable in the Vercel dashboard
-4. Deploy — Vercel auto-detects the Vite config and the `api/` functions
+3. Add the six `VITE_FIREBASE_*` values as Environment Variables in the Vercel dashboard
+4. Deploy — Vercel auto-detects the Vite config
 
 The `vercel.json` handles:
 
@@ -450,17 +454,18 @@ canvas loading a GLB car, a runtime auto-fit transform, a dark-garage lighting
 rig, and a lerped camera. **Phase 6** was polish — the cursor spotlight, the
 easter eggs, the responsive / touch / reduced-motion passes, capability gating so
 mobile never downloads the 3 MB model, and the groundwork for the backend
-partner. **Phase 7** wired all six pages to a Neon Postgres backend through
-Drizzle ORM and Vercel serverless functions.
+partner. **Phase 7** wired all six pages to a Firebase (Firestore) backend
+via the Firebase Web SDK, with security rules gating writes.
 
 ---
 
 ## Known Issues + Limitations
 
-- **Gallery images are placeholders** — the 12 seeded rows have no
-  `image_url`/`thumb_url` yet, so tiles still render as CSS gradients with
-  numbered labels until real photos are uploaded and their URLs saved.
-- **Team members table is empty** — department cards fall back to generic
+- **Gallery images are placeholders** — the 12 seeded docs have no
+  `imageUrl`/`thumbUrl` yet, so tiles still render as CSS gradients with
+  numbered labels until real photos are uploaded to Firebase Storage and
+  their URLs saved.
+- **Team members collection is empty** — department cards fall back to generic
   "Member #n" placeholder slots until the real roster is seeded into
   `members`, and the Starting Grid recruitment slots are still hardcoded
   (they're recruitment copy, not roster data).
@@ -468,8 +473,8 @@ Drizzle ORM and Vercel serverless functions.
   active state but don't yet filter results.
 - **Footer social links are `#` placeholders** — Instagram / LinkedIn / GitHub
   aren't set.
-- **No admin panel yet** — `applications` and `members` can only be managed by
-  querying Neon directly (`npm run db:studio`) until Phase 8 builds `/admin`.
+- **No admin panel yet** — `applications` and `members` can only be managed in
+  the Firebase Console until Phase 8 builds `/admin`.
 - **3D quality depends on the GLB asset** and requires runtime network access to
   fetch the `night` HDRI environment map from a CDN.
 - **No LICENSE file** and no automated tests are present.
@@ -478,42 +483,42 @@ Drizzle ORM and Vercel serverless functions.
 
 ## Backend
 
-The backend is [Neon](https://neon.tech) (serverless Postgres) queried through
-[Drizzle ORM](https://orm.drizzle.team), fronted by Vercel serverless
-functions under `api/` — the browser talks to `/api/*`, never to Postgres
-directly. Full schema, API route reference, and setup steps are in
-[`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md).
+The backend is [Firebase](https://firebase.google.com) — Cloud Firestore for
+data, Firebase Storage for images, Firebase Auth for the future admin panel.
+The browser reads Firestore directly through the Web SDK; security rules
+(`firestore.rules`) allow public reads on content collections and
+validated-write-only access to `applications`. Full schema is in
+[`FIRESTORE_SCHEMA.md`](FIRESTORE_SCHEMA.md).
 
 All six pages (Events, Projects, Teams, Gallery, Home stats, Join) are wired
-to their respective `/api/*` routes — no more hardcoded arrays. `members` and
-`applications` start empty; `members` needs the real club roster, and
-`applications` fills up from Join form submissions.
+to Firestore — no more hardcoded arrays. `members` starts empty until the
+real club roster is added, and `applications` fills up from Join form
+submissions.
 
 ### Local setup
 
 ```
-[ ] Create a Neon project at console.neon.tech
-[ ] Copy the connection string into .env.local as DATABASE_URL
-[ ] npm run db:push   # applies db/schema.js to the database
-[ ] npm run seed      # seeds events, projects, gallery, site_config
-[ ] npx vercel dev    # runs frontend + /api together locally
+[ ] Create a Firebase project at console.firebase.google.com
+[ ] Enable Firestore (asia-south1), Storage, and Auth (Email/Password)
+[ ] Add a Web App and copy its config into .env.local (VITE_FIREBASE_*)
+[ ] Deploy rules: npm i -g firebase-tools, firebase login, firebase deploy --only firestore,storage
+[ ] Download a service account key to serviceAccountKey.json (gitignored)
+[ ] npm run seed   # seeds events, projects, gallery, siteConfig, applications
+[ ] npm run dev    # plain Vite — no API layer needed
 ```
-
-`npm run dev` (plain Vite) does not serve `/api` — use `npx vercel dev`
-locally so `fetch('/api/...')` calls resolve.
 
 ### Admin panel (not yet built)
 
 An admin panel for managing dynamic content without touching code — suggested
-route `/admin`, needing its own auth layer (there's no Firebase Auth
-equivalent wired up yet). Pages needed:
+route `/admin`, protected by Firebase Auth (admins get an `admin: true`
+custom claim, which the security rules already check). Pages needed:
 
 - `/admin/events` — create, edit, delete events
 - `/admin/projects` — manage projects
 - `/admin/members` — manage team members
-- `/admin/gallery` — upload photos, reorder grid
+- `/admin/gallery` — upload photos to Storage, reorder grid
 - `/admin/applications` — review Join form submissions, accept/reject
-- `/admin/config` — edit `site_config` (stats, season status, announcement)
+- `/admin/config` — edit `siteConfig` (stats, season status, announcement)
 
 ---
 

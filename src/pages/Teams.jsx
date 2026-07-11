@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageHero from '@/components/ui/PageHero'
 import SectionHeader from '@/components/ui/SectionHeader'
@@ -61,10 +63,16 @@ export default function Teams() {
 
   useEffect(() => {
     const load = async () => {
-      const res = await fetch('/api/members')
-      const rows = await res.json()
+      const q = query(
+        collection(db, 'members'),
+        where('active', '==', true),
+        orderBy('department', 'asc'),
+        orderBy('order', 'asc')
+      )
+      const snap = await getDocs(q)
       const grouped = {}
-      rows.forEach((member) => {
+      snap.docs.forEach((d) => {
+        const member = d.data()
         if (!grouped[member.departmentCode]) grouped[member.departmentCode] = []
         grouped[member.departmentCode].push(member)
       })

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import HeroSection from '@/components/hero/HeroSection'
 import SectionHeader from '@/components/ui/SectionHeader'
@@ -55,9 +57,9 @@ export default function Home() {
 
   useEffect(() => {
     const load = async () => {
-      const res = await fetch('/api/site-config')
-      if (!res.ok) return
-      const { stats: s } = await res.json()
+      const snap = await getDoc(doc(db, 'siteConfig', 'main'))
+      if (!snap.exists()) return
+      const { stats: s } = snap.data()
       setStats([
         { value: String(s.members), suffix: '+', label: 'Active Members' },
         { value: String(s.projects), suffix: '', label: 'Projects Built' },

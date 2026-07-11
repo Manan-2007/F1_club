@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { collection, getDocs, orderBy, query } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageHero from '@/components/ui/PageHero'
 import TelemetryCard from '@/components/ui/TelemetryCard'
@@ -16,18 +18,21 @@ export default function Projects() {
 
   useEffect(() => {
     const load = async () => {
-      const res = await fetch('/api/projects')
-      const rows = await res.json()
+      const q = query(collection(db, 'projects'), orderBy('order', 'asc'))
+      const snap = await getDocs(q)
       setProjects(
-        rows.map((row) => ({
-          id: row.projectId,
-          tag: row.tag,
-          status: row.status.toUpperCase(),
-          variant: row.status,
-          title: row.title,
-          desc: row.description,
-          tech: row.techStack ?? [],
-        }))
+        snap.docs.map((d) => {
+          const data = d.data()
+          return {
+            id: data.projectId,
+            tag: data.tag,
+            status: data.status.toUpperCase(),
+            variant: data.status,
+            title: data.title,
+            desc: data.description,
+            tech: data.techStack ?? [],
+          }
+        })
       )
     }
     load()

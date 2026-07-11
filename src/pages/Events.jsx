@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { collection, getDocs, orderBy, query } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageHero from '@/components/ui/PageHero'
 import TelemetryCard from '@/components/ui/TelemetryCard'
@@ -14,18 +16,21 @@ export default function Events() {
 
   useEffect(() => {
     const load = async () => {
-      const res = await fetch('/api/events')
-      const rows = await res.json()
+      const q = query(collection(db, 'events'), orderBy('round', 'asc'))
+      const snap = await getDocs(q)
       setEvents(
-        rows.map((row) => ({
-          round: String(row.round).padStart(2, '0'),
-          title: row.title,
-          status: row.status.toUpperCase(),
-          variant: row.status,
-          type: row.type,
-          date: row.dateLabel,
-          desc: row.description,
-        }))
+        snap.docs.map((d) => {
+          const data = d.data()
+          return {
+            round: String(data.round).padStart(2, '0'),
+            title: data.title,
+            status: data.status.toUpperCase(),
+            variant: data.status,
+            type: data.type,
+            date: data.dateLabel,
+            desc: data.description,
+          }
+        })
       )
     }
     load()

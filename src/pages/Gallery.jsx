@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageHero from '@/components/ui/PageHero'
 
@@ -39,17 +41,20 @@ export default function Gallery() {
 
   useEffect(() => {
     const load = async () => {
-      const res = await fetch('/api/gallery')
-      const rows = await res.json()
+      const q = query(collection(db, 'gallery'), orderBy('order', 'asc'), limit(24))
+      const snap = await getDocs(q)
       setItems(
-        rows.map((row, i) => ({
-          id: row.id,
-          label: row.title,
-          date: row.dateLabel ?? '',
-          span: SPAN_CLASSES[row.span] ?? '',
-          gradient: FALLBACK_GRADIENTS[i % FALLBACK_GRADIENTS.length],
-          imageUrl: row.imageUrl ?? null,
-        }))
+        snap.docs.map((d, i) => {
+          const data = d.data()
+          return {
+            id: d.id,
+            label: data.title,
+            date: data.dateLabel ?? '',
+            span: SPAN_CLASSES[data.span] ?? '',
+            gradient: FALLBACK_GRADIENTS[i % FALLBACK_GRADIENTS.length],
+            imageUrl: data.imageUrl ?? null,
+          }
+        })
       )
     }
     load()

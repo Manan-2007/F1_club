@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import PageWrapper from '@/components/layout/PageWrapper'
 import PageHero from '@/components/ui/PageHero'
 import ScrollReveal from '@/components/ui/ScrollReveal'
@@ -77,29 +79,22 @@ export default function Join() {
     setSubmitting(true)
     setError(null)
     try {
-      const res = await fetch('/api/applications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.fullName,
-          email: form.email,
-          year: form.year,
-          role: ROLE_TO_ENUM[selectedRole],
-          why: form.why,
-          link: form.link || null,
-        }),
+      await addDoc(collection(db, 'applications'), {
+        name: form.fullName,
+        email: form.email,
+        year: form.year,
+        role: ROLE_TO_ENUM[selectedRole],
+        why: form.why,
+        link: form.link || null,
+        status: 'pending',
+        notes: null,
+        submittedAt: serverTimestamp(),
+        reviewedAt: null,
+        reviewedBy: null,
       })
-      if (!res.ok) {
-        const body = await res.json().catch(() => null)
-        throw new Error(body?.error || 'Request failed')
-      }
       setSubmitted(true)
     } catch (err) {
-      setError(
-        err.message && err.message !== 'Request failed'
-          ? err.message
-          : 'Something went wrong submitting your application. Please try again.'
-      )
+      setError('Something went wrong submitting your application. Please try again.')
       console.error(err)
     } finally {
       setSubmitting(false)
