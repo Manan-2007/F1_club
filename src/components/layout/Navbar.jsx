@@ -9,7 +9,6 @@ const navLinks = [
   { label: 'Teams', to: '/teams' },
   { label: 'Projects', to: '/projects' },
   { label: 'Events', to: '/events' },
-  { label: 'Gallery', to: '/gallery' },
 ]
 
 export default function Navbar() {

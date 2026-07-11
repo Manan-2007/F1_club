@@ -12,7 +12,6 @@ import About from '@/pages/About'
 import Teams from '@/pages/Teams'
 import Projects from '@/pages/Projects'
 import Events from '@/pages/Events'
-import Gallery from '@/pages/Gallery'
 import Join from '@/pages/Join'
 
 export default function App() {
@@ -42,7 +41,6 @@ export default function App() {
           <Route path="/teams" element={<Teams />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/events" element={<Events />} />
-          <Route path="/gallery" element={<Gallery />} />
           <Route path="/join" element={<Join />} />
         </Routes>
       </AnimatePresence>
